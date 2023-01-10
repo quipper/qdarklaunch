@@ -44,8 +44,7 @@ func GetDarklaunch(version string, name string) (bool, error) {
 	}
 
 	var response DarklaunchResponse
-	json.Unmarshal([]byte(body), &response)
-	if response.Error != "" {
+	if err := json.Unmarshal([]byte(body), &response); err != nil {
 		return false, errors.New(response.Error)
 	}
 
