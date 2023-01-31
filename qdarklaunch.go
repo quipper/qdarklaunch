@@ -10,7 +10,20 @@ import (
 
 type DarklaunchResponse struct {
 	Result bool
-	Error  string
+	Error  error
+}
+
+// HTTPClient interface
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
+var (
+	Client HTTPClient
+)
+
+func init() {
+	Client = &http.Client{}
 }
 
 func validateParams(name string, version string) (bool, string) {
@@ -25,27 +38,34 @@ func validateParams(name string, version string) (bool, string) {
 	}
 }
 
-func GetDarklaunch(version string, name string) (bool, error) {
+func GetDarklaunch(version string, name string, userId string) (bool, error) {
 	isValid, errorMessage := validateParams(name, version)
 	if !isValid {
 		return false, errors.New(errorMessage)
 	}
 
-	darklaunchUrl := fmt.Sprintf("http://api/%v/darklaunch/%v", version, name)
-	resp, err := http.Get(darklaunchUrl)
+	darklaunchUrl := fmt.Sprintf("http://api/%v/darklaunch/%v?user[id]=%v", version, name, userId)
+	resp, err := httpGetDarklaunch(darklaunchUrl)
+	return resp, err
+}
+
+var httpGetDarklaunch = func(url string) (bool, error) {
+	req, _ := http.NewRequest(http.MethodGet, url, nil)
+	resp, err := Client.Do(req)
 	if err != nil {
 		return false, errors.New(err.Error())
 	}
 
-	// Read the response body
 	body, err := io.ReadAll(resp.Body)
+
 	if err != nil {
 		return false, errors.New(err.Error())
 	}
 
 	var response DarklaunchResponse
-	if err := json.Unmarshal([]byte(body), &response); err != nil {
-		return false, errors.New(response.Error)
+	json.Unmarshal([]byte(body), &response)
+	if response.Error != nil {
+		return false, response.Error
 	}
 
 	return response.Result, nil
