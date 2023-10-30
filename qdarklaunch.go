@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 type DarklaunchResponse struct {
@@ -23,7 +24,9 @@ var (
 )
 
 func init() {
-	Client = &http.Client{}
+	Client = &http.Client{
+		Timeout: 60 * time.Second,
+	}
 }
 
 func validateParams(name string, version string) (bool, string) {
