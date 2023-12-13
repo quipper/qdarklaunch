@@ -1,4 +1,4 @@
-module github.com/nurhadimaulana2309/qdarklaunch
+module github.com/quipper/qdarklaunch
 
 go 1.19
 
